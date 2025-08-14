@@ -1,13 +1,12 @@
 # app_portaal.py
 # Hoofdportaal (Launcher) + Slimme zoekfunctie met resultaten in de hoofd-GUI
 
-# [SECTION: Imports & Constants]
+# [SECTION: Imports]
 import sys, csv, logging, re
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
 from PyQt6.QtWidgets import (
-# [END: Imports & Constants]
     QApplication, QMainWindow, QLabel, QWidget, QHBoxLayout, QVBoxLayout,
     QLineEdit, QPushButton, QTableView, QMessageBox
 )
@@ -16,6 +15,7 @@ from PyQt6.QtCore import Qt
 
 from gui.Launcher import Ui_LauncherWindow  # UI→PY uit Launcher.ui
 
+# [END: Imports]
 DATA_DIR = Path("resources")
 DEFAULT_CSV = DATA_DIR / "products.csv"
 DEFAULT_XLSX = DATA_DIR / "products.xlsx"
@@ -44,8 +44,8 @@ def first_present(cands: List[str], header: List[str]) -> Optional[str]:
             return c
     return None
 
-# [FUNC: try_load_xlsx]
 # [END: first_present]
+# [FUNC: try_load_xlsx]
 def try_load_xlsx(path: Path) -> List[Dict[str, Any]]:
     try:
         import openpyxl  # type: ignore
@@ -66,8 +66,8 @@ def try_load_xlsx(path: Path) -> List[Dict[str, Any]]:
     logging.info(f"XLSX geladen: {path}  rijen={len(data)}")
     return data
 
-# [FUNC: read_csv_smart]
 # [END: try_load_xlsx]
+# [FUNC: read_csv_smart]
 def read_csv_smart(path: Path) -> List[Dict[str, Any]]:
     encodings = ["utf-8", "utf-8-sig", "cp1252", "latin-1"]
     for enc in encodings:
@@ -89,8 +89,8 @@ def read_csv_smart(path: Path) -> List[Dict[str, Any]]:
         logging.warning(f"CSV geladen met cp1252 (met vervangtekens), rijen={len(rows)}")
         return rows
 
-# [FUNC: load_any_products]
 # [END: read_csv_smart]
+# [FUNC: load_any_products]
 def load_any_products(path_csv: Path, path_xlsx: Path) -> List[Dict[str, Any]]:
     if path_csv.exists():
         logging.info(f"CSV laden: {path_csv}")
@@ -100,8 +100,8 @@ def load_any_products(path_csv: Path, path_xlsx: Path) -> List[Dict[str, Any]]:
         return try_load_xlsx(path_xlsx)
     raise FileNotFoundError(f"Geen productbestand gevonden in {DATA_DIR}. Plaats 'products.csv' of 'products.xlsx'.")
 
-# [FUNC: normalize_number]
 # [END: load_any_products]
+# [FUNC: normalize_number]
 def normalize_number(val) -> float:
     if val is None: return 0.0
     if isinstance(val, (int, float)): return float(val)
@@ -160,8 +160,8 @@ def _load_app(modname: str, fallback_title: str):
                 self.setCentralWidget(lbl)
         return Stub
 
-# [CLASS: AppPortaal]
 # [END: _load_app]
+# [CLASS: AppPortaal]
 class AppPortaal(QMainWindow):
 # [FUNC: __init__]
     def __init__(self):
@@ -226,8 +226,8 @@ class AppPortaal(QMainWindow):
         self.ui.btnReparaties.clicked.connect(lambda: self.open_window(ReparatiesWin))
         self.ui.btnWerknemers.clicked.connect(lambda: self.open_window(WerknemersWin))
 
-# [FUNC: _build_smart_ui]
 # [END: __init__]
+# [FUNC: _build_smart_ui]
     def _build_smart_ui(self):
         # Bovenaan, vóór label/titel: een rij met zoekveld + knop
         top_layout: QVBoxLayout = self.ui.centralwidget.layout()  # hoofd-VBox
@@ -255,8 +255,8 @@ class AppPortaal(QMainWindow):
         btn.clicked.connect(self._on_smart_search)
         self.lineSmart.returnPressed.connect(self._on_smart_search)
 
-# [FUNC: _on_smart_search]
 # [END: _build_smart_ui]
+# [FUNC: _on_smart_search]
     def _on_smart_search(self):
         q = self.lineSmart.text().strip()
         if not q:
@@ -265,8 +265,8 @@ class AppPortaal(QMainWindow):
         matched = self._search_products(needle)
         self._show_results(matched, intent, needle)
 
-# [FUNC: _search_products]
 # [END: _on_smart_search]
+# [FUNC: _search_products]
     def _search_products(self, needle: str) -> List[Dict[str, Any]]:
         if not self.products:
             QMessageBox.information(self, "Geen data", "Kan geen producten laden (resources/products.csv?).")
@@ -282,8 +282,8 @@ class AppPortaal(QMainWindow):
             or s in str(r.get("_barcode","")).lower()
         ]
 
-# [FUNC: _show_results]
 # [END: _search_products]
+# [FUNC: _show_results]
     def _show_results(self, rows: List[Dict[str, Any]], intent: str, needle: str):
         # kolommen afhankelijk van intent
         if intent == "stock":
@@ -331,8 +331,8 @@ class AppPortaal(QMainWindow):
         else:
             self.lblSummary.setText(f'Resultaten: {n} voor "{needle}".')
 
-# [FUNC: open_window]
 # [END: _show_results]
+# [FUNC: open_window]
     def open_window(self, cls):
         win = cls()
         self._windows.append(win)
@@ -340,17 +340,17 @@ class AppPortaal(QMainWindow):
         win.destroyed.connect(lambda _: self._windows.remove(win) if win in self._windows else None)
         win.show()
 
-# [FUNC: start]
 # [END: open_window]
 # [END: AppPortaal]
+# [FUNC: start]
 def start():
     app = QApplication(sys.argv)
     w = AppPortaal()
     w.show()
     sys.exit(app.exec())
 
-# [SECTION: CLI / Entrypoint]
 # [END: start]
+# [SECTION: CLI / Entrypoint]
 if __name__ == "__main__":
     start()
 # [END: CLI / Entrypoint]
